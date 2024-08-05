@@ -8,12 +8,12 @@ const mongoDB = config.dotEnv.MONGO_URI? require('./connect/mongo')({
 
 const cache = require('./cache/cache.dbh')({
     prefix: config.dotEnv.CACHE_PREFIX ,
-    url: config.dotEnv.CACHE_REDIS
+    url: `redis://${config.dotEnv.CACHE_REDIS_USERNAME}:${config.dotEnv.CACHE_REDIS_PASSWORD}@${config.dotEnv.CACHE_REDIS}`
 });
 
 const cortex = new Cortex({
     prefix: config.dotEnv.CORTEX_PREFIX,
-    url: config.dotEnv.CORTEX_REDIS,
+    url: `redis://${config.dotEnv.CACHE_REDIS_USERNAME}:${config.dotEnv.CACHE_REDIS_PASSWORD}@${config.dotEnv.CACHE_REDIS}`,
     type: config.dotEnv.CORTEX_TYPE,
     state: ()=>{
         return {} 
