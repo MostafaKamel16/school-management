@@ -12,7 +12,14 @@ const systemArch            = require('../static_arch/main.system');
 const TokenManager          = require('../managers/token/Token.manager');
 const SharkFin              = require('../managers/shark_fin/SharkFin.manager');
 const TimeMachine           = require('../managers/time_machine/TimeMachine.manager');
-
+const UserManager           = require('../managers/entities/user/User.manager')
+const SchoolManager         = require('../managers/entities/school/School.manager')
+const StudentManager        = require('../managers/entities/student/Student.manager')
+const ClassroomManager      = require('../managers/entities/classroom/Classroom.manager')
+const UserModel             = require('../managers/entities/user/User.Model')
+const SchoolModel           = require('../managers/entities/school/School.model')
+const ClassroomModel        = require('../managers/entities/classroom/Classroom.model')
+const StudentModel          = require('../managers/entities/student/Student.model')
 /** 
  * load sharable modules
  * @return modules tree with instance of each module
@@ -35,7 +42,7 @@ module.exports = class ManagersLoader {
             aeon,
             managers: this.managers, 
             validators: this.validators,
-            // mongomodels: this.mongomodels,
+            mongomodels: { UserModel, SchoolModel, ClassroomModel, StudentModel,ClassroomModel },
             resourceNodes: this.resourceNodes,
         };
         
@@ -66,12 +73,15 @@ module.exports = class ManagersLoader {
         this.managers.shark               = new SharkFin({ ...this.injectable, layers, actions });
         this.managers.timeMachine         = new TimeMachine(this.injectable);
         this.managers.token               = new TokenManager(this.injectable);
+        this.managers.user                = new UserManager(this.injectable)
+        this.managers.school              = new SchoolManager(this.injectable)
+        this.managers.student             = new StudentManager(this.injectable)
+        this.managers.classroom           = new ClassroomManager(this.injectable)
         /*************************************************************************************************/
         this.managers.mwsExec             = new VirtualStack({ ...{ preStack: [/* '__token', */'__device',] }, ...this.injectable });
         this.managers.userApi             = new ApiHandler({...this.injectable,...{prop:'httpExposed'}});
         this.managers.userServer          = new UserServer({ config: this.config, managers: this.managers });
 
-       
         return this.managers;
 
     }

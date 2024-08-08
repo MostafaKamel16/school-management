@@ -1,4 +1,3 @@
-
 require('dotenv').config()
 const os                               = require('os');
 const pjson                            = require('../package.json');
@@ -18,6 +17,8 @@ const OYSTER_PREFIX                    = process.env.OYSTER_PREFIX || 'none';
 
 const CACHE_REDIS                      = process.env.CACHE_REDIS || REDIS_URI;
 const CACHE_PREFIX                     = process.env.CACHE_PREFIX || `${SERVICE_NAME}:ch`;
+const CACHE_REDIS_USERNAME             = process.env.CACHE_REDIS_USERNAME
+const CACHE_REDIS_PASSWORD             = process.env.CACHE_REDIS_PASSWORD
 
 const MONGO_URI                        = process.env.MONGO_URI || `mongodb://localhost:27017/${SERVICE_NAME}`;
 const config                           = require(`./envs/${ENV}.js`);
@@ -39,6 +40,8 @@ config.dotEnv = {
     OYSTER_PREFIX,
     CACHE_REDIS,
     CACHE_PREFIX,
+    CACHE_REDIS_USERNAME,
+    CACHE_REDIS_PASSWORD,
     MONGO_URI,
     USER_PORT,
     ADMIN_PORT,
