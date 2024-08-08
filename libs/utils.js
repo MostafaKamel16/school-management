@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt');
 const slugify = (text)=>{
   const from = "ãàáäâẽèéëêìíïîõòóöôùúüûñç·/_,:;"
   const to = "aaaaaeeeeeiiiiooooouuuunc------"
@@ -14,6 +15,13 @@ const slugify = (text)=>{
     .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
     .replace(/\-\-+/g, '-');        // Replace multiple - with single -
 }
+
+const hashPassword = async (password)=>{
+    const saltRounds = 10;
+    hashedPassword = await bcrypt.hash(password, saltRounds);
+    return hashedPassword;
+}
+
 
 
 /**
@@ -147,5 +155,5 @@ module.exports = {
   hrTime,
   match,
   isChance,
-
+  hashPassword,
 }
