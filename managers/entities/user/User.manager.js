@@ -7,7 +7,7 @@ module.exports = class User {
         this.mongomodels         = mongomodels;
         this.tokenManager        = managers.token;
         this.usersCollection     = "users";
-        this.httpExposed         = ['post=createUser', 'get=getUser', 'put=updateUser','delete=deleteUser', 'get=listUsers'];
+        this.httpExposed         = ['post=createUser', 'get=getUser', 'put=updateUser','delete=deleteUser', 'get=listUsers', 'post=loginUser'];
         this.utils= utils;
     }
 
@@ -63,8 +63,13 @@ module.exports = class User {
             return { error: 'An error occurred while updating the user' };
         }
     }
-    async deleteUser({ userId }) {
+    async deleteUser({__headers, userId}) {
         try {
+            console.log('headers',__headers.token)
+            const decoded = this.tokenManager.verifyShortToken({ token: __headers.token });
+            if (!decoded || decoded.userId !== userId) {
+                return { error: 'Invalid or expired token' };
+            }
             let user = await this.mongomodels.UserModel.findByIdAndDelete(userId);
             if (!user) {
                 return { error: 'User not found' };
@@ -82,6 +87,46 @@ module.exports = class User {
             return { users };
         } catch (error) {
             return { error: 'An error occurred while listing the users' };
+        }
+    }
+    async loginUser(req) {
+        try {
+            const { username, password } = req;
+            // Find the user by username
+            let user = await this.mongomodels.UserModel.findOne({ username });
+            if (!user) {
+                return { error: 'Invalid username or password' };
+            }
+    
+            // Validate the password
+            let isPasswordValid = await this.utils.comparePassword(password, user.password);
+            if (!isPasswordValid) {
+                return { error: 'Invalid username or password' };
+            }
+    
+            // Generate tokens
+            let longToken = this.tokenManager.genLongToken({ userId: user._id, userKey: user.key });
+            console.log('longToken', longToken);
+            let shortTokenResponse = this.tokenManager.v1_createShortTokenFromLongToken({
+                __longToken: longToken,
+                __device: req.__device
+            });
+            
+            if (shortTokenResponse.error) {
+                return { error: 'An error occurred while generating short token' };
+            }
+            
+            let shortToken = shortTokenResponse.shortToken;
+    
+            // Respond with tokens
+            return {
+                user,
+                longToken,
+                shortToken
+            };
+        } catch (error) {
+            console.log(error);
+            return { error: 'An error occurred while logging in' };
         }
     }
 }

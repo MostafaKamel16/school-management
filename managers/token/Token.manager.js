@@ -61,11 +61,30 @@ module.exports = class TokenManager {
 
 
     /** generate shortId based on a longId */
-    v1_createShortToken({__longToken, __device}){
+    v1_createShortTokenFromLongToken({__longToken, __device}){
 
 
         let decoded = __longToken;
         console.log(decoded);
+        
+        let shortToken = this.genShortToken({
+            userId: decoded.userId, 
+            userKey: decoded.userKey,
+            sessionId: nanoid(),
+            deviceId: md5(__device),
+        });
+
+        return { shortToken };
+    }
+
+       /** generate shortId from longId extracted from header */
+       v1_createShortToken({__headers, __device}){
+        const token = __headers.token;
+        if(!token)return {error: 'missing token '};
+        console.log('found token', token);
+
+        let decoded = this.verifyLongToken({ token });
+        if(!decoded){ return {error: 'invalid'} };
         
         let shortToken = this.genShortToken({
             userId: decoded.userId, 
