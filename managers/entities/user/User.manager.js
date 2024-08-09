@@ -1,3 +1,6 @@
+const { getSuperAdmins } = require('../../../exportSuperAdmins');
+const superAdmins = getSuperAdmins();
+const ValidatorsLoader = require('../../../loaders/ValidatorsLoader'); 
 module.exports = class User { 
 
     constructor({utils, cache, config, cortex, managers, validators, mongomodels }={}){
@@ -15,8 +18,7 @@ module.exports = class User {
         const user = {username, email, password};
 
         // Data validation
-        let result = await this.validators.user.createUser(user);
-        if(result) return result;
+        await this.validators.user.createUser(user);
         
         try {
         // Check if user already exists
@@ -26,10 +28,12 @@ module.exports = class User {
         }
          // Hash the password before saving
         user.password = await this.utils.hashPassword(password);
+
+        
             // Save the user to the database
         let createdUser = await this.mongomodels.UserModel.create(user);
         // Creation Logic
-        let longToken       = this.tokenManager.genLongToken({userId: createdUser._id, userKey: createdUser.key });
+        let longToken       = this.tokenManager.genLongToken({userId: createdUser._id });
         
         // Response
         return {
@@ -41,8 +45,13 @@ module.exports = class User {
         return { error: 'An error occurred while creating the user' };
     }
     }
-    async getUser({ userId }) {
+    async getUser({ __headers, userId }) {
         try {
+            // Make sure only user can fetch his own information
+            const decoded = this.tokenManager.verifyLongToken({ token: __headers.token });
+            if (!decoded || decoded.userId !== userId) {
+                return { error: 'Invalid or expired token' };
+            }
             let user = await this.mongomodels.UserModel.findById(userId);
             if (!user) {
                 return { error: 'User not found' };
@@ -52,8 +61,13 @@ module.exports = class User {
             return { error: 'An error occurred while retrieving the user' };
         }
     }
-    async updateUser({ userId, updates }) {
+    async updateUser({ __headers,userId, updates }) {
         try {
+            // Make sure only user can update his own information
+            const decoded = this.tokenManager.verifyLongToken({ token: __headers.token });
+            if (!decoded || decoded.userId !== userId) {
+                return { error: 'Invalid or expired token' };
+            }
             let user = await this.mongomodels.UserModel.findByIdAndUpdate(userId, updates, { new: true });
             if (!user) {
                 return { error: 'User not found' };
@@ -65,8 +79,8 @@ module.exports = class User {
     }
     async deleteUser({__headers, userId}) {
         try {
-            console.log('headers',__headers.token)
-            const decoded = this.tokenManager.verifyShortToken({ token: __headers.token });
+            // Make sure only user can delete his own information
+            const decoded = this.tokenManager.verifyLongToken({ token: __headers.token });
             if (!decoded || decoded.userId !== userId) {
                 return { error: 'Invalid or expired token' };
             }
@@ -79,13 +93,23 @@ module.exports = class User {
             return { error: 'An error occurred while deleting the user' };
         }
     }
-    async listUsers({ page = 1, limit = 10 }) {
+    async listUsers({__headers, page = 1, limit = 10 }) {
         try {
+            const decoded = this.tokenManager.verifyLongToken({ token: __headers.token });
+            if (!decoded ) {
+                return { error: 'Invalid or expired token' };
+            }
+            let user = await this.mongomodels.UserModel.findById(decoded.userId);
+            //only superadmins can see the list of users
+            if(user.role !== 'superAdmin'){
+                return { error: 'You are not authorized to perform this operation' };
+            }
             let users = await this.mongomodels.UserModel.find()
                 .skip((page - 1) * limit)
                 .limit(limit);
             return { users };
         } catch (error) {
+            console.log(error);
             return { error: 'An error occurred while listing the users' };
         }
     }
@@ -103,10 +127,14 @@ module.exports = class User {
             if (!isPasswordValid) {
                 return { error: 'Invalid username or password' };
             }
+
+            if(superAdmins.includes(user.email)){
+                user.role = 'superAdmin'
+                await user.save(); 
+            }
     
             // Generate tokens
             let longToken = this.tokenManager.genLongToken({ userId: user._id, userKey: user.key });
-            console.log('longToken', longToken);
             let shortTokenResponse = this.tokenManager.v1_createShortTokenFromLongToken({
                 __longToken: longToken,
                 __device: req.__device
@@ -125,7 +153,6 @@ module.exports = class User {
                 shortToken
             };
         } catch (error) {
-            console.log(error);
             return { error: 'An error occurred while logging in' };
         }
     }

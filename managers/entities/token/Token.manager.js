@@ -55,6 +55,7 @@ module.exports = class TokenManager {
     }
     
     verifyShortToken({token}){
+        console.log('Public Key:', this.publicKey); // Log the public key
         return this._verifyToken({token, secret: this.config.dotEnv.SHORT_TOKEN_SECRET,})
     }
 
