@@ -34,7 +34,10 @@ To run the application locally, follow these steps:
     ```
 
 3. **Set up environment variables**:
-   .env file should not be in the remote repo, but for the sake of the project, I left in the repo to be able to use my remote resources when you run app locally.
+   .env file should not be in the remote repo, but for the sake of the project, I left in the repo to be able to use my remote resources when you run app locally. if you want to add your own remote resources, you can update .env and set variables.
+     ```env
+    MONGODB_URI=your_mongodb_uri
+    REDIS_URI=your_redis_uri
     ```
 
 4. **Run the application**:
@@ -45,12 +48,12 @@ To run the application locally, follow these steps:
 Later there is a detailed explanation of the routes 
 
 ## Usage 
-1) create a user with username, email and password 
-2) if you want the user to be able to access all endpoints, add the email to listOfSuperAdmins.json , We wanted to act like a real sceanrio where you get your access when you login 
-3) When you login, you get long token and short token, copy the long token
-4) add to headers a token and set its value as the copied long token.
-5) if the user is superadmin, he will be able to create a school.
-6) create a school, add admins for this school, only admins for a certain school can create classrooms and students for this school.
+1) Register a user with a username, email, and password.
+2) To provide a user with access to all endpoints, add their email to `listOfSuperAdmins.json`. This mimics a real-world scenario where access is granted upon login.
+3) Upon logging in, you will receive a long token and a short token. Copy the long token.
+4) In the headers for an endpoint, add a token and set its value to the copied long token.
+5) If the user is a superadmin, they will have the ability to create a school.
+6) Create a school and assign admins to it. Only admins of a specific school can create classrooms and students for that school.
 
 ## Endpoints
 
@@ -83,10 +86,11 @@ Later there is a detailed explanation of the routes
 - `DELETE /deleteClassroom`
 
 
-Example : https://school-management-mostafa-df166f6a3694.herokuapp.com/api/user/listUsers
-          https://school-management-mostafa-df166f6a3694.herokuapp.com/api/user/loginUser
-          https://school-management-mostafa-df166f6a3694.herokuapp.com/api/school/createSchool
-          https://school-management-mostafa-df166f6a3694.herokuapp.com/api/classroom/deleteClassroom
+Examples of valid routes:
+- https://school-management-mostafa-df166f6a3694.herokuapp.com/api/user/listUsers
+- https://school-management-mostafa-df166f6a3694.herokuapp.com/api/user/loginUser
+- https://school-management-mostafa-df166f6a3694.herokuapp.com/api/school/createSchool
+- https://school-management-mostafa-df166f6a3694.herokuapp.com/api/classroom/deleteClassroom
         
 ## Contributing
 
