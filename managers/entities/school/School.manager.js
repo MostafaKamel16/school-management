@@ -6,16 +6,31 @@ class SchoolManager {
         this.mongomodels = mongomodels;
         this.tokenManager = managers.token;
         this.schoolsCollection = "schools";
-        this.httpExposed = ['post=createSchool', 'get=getSchool', 'put=updateSchool', 'delete=deleteSchool', 'get=listSchools','post=addAdmins','delete=removeAdmin','put=updateAdmins','get=getAdmins'];
+        this.httpExposed = ['post=createSchool', 'get=getSchool', 'put=updateSchool', 'delete=deleteSchool', 'get=listSchools','post=addSchoolAdmins'];
         this.utils = utils;
     }
 
-    async createSchool({ name, address, superadmin }) {
-        const school = { name, address, superadmin };
 
-        // Data validation
-        // let result = await this.validators.school.createSchool(school);
-        // if (result) return result;
+    async verifySuperAdmin(token) {
+        const decoded = this.tokenManager.verifyLongToken({ token });
+        if (!decoded) {
+            return { error: 'Invalid or expired token' };
+        }
+        let user = await this.mongomodels.UserModel.findById(decoded.userId);
+        if (user.role !== 'superAdmin') {
+            return { error: 'You are not authorized to perform this operation' };
+        }
+    }
+
+    async createSchool({ __headers, name, address, superadmin }) {
+
+        // Verify if the user is a super admin
+        const verificationResult = await this.verifySuperAdmin(__headers.token);
+        if (verificationResult) {
+            return verificationResult;
+        }
+
+        const school = { name, address, superadmin };
 
         try {
             // Save the school to the database
@@ -30,8 +45,15 @@ class SchoolManager {
         }
     }
 
-    async getSchool({ schoolId }) {
+    async getSchool({__headers, schoolId }) {
         try {
+
+            // Verify if the user is a super admin
+            const verificationResult = await this.verifySuperAdmin(__headers.token);
+            if (verificationResult) {
+                return verificationResult;
+            }
+            
             let school = await this.mongomodels.SchoolModel.findById(schoolId);
             if (!school) {
                 return { error: 'School not found' };
@@ -42,8 +64,14 @@ class SchoolManager {
         }
     }
 
-    async updateSchool({ schoolId, updates }) {
+    async updateSchool({ __headers,schoolId, updates }) {
         try {
+            // Verify if the user is a super admin
+            const verificationResult = await this.verifySuperAdmin(__headers.token);
+            if (verificationResult) {
+                return verificationResult;
+            }
+            
             let school = await this.mongomodels.SchoolModel.findByIdAndUpdate(schoolId, updates, { new: true });
             if (!school) {
                 return { error: 'School not found' };
@@ -54,8 +82,15 @@ class SchoolManager {
         }
     }
 
-    async deleteSchool({ schoolId }) {
+    async deleteSchool({__headers, schoolId }) {
         try {
+
+           // Verify if the user is a super admin
+           const verificationResult = await this.verifySuperAdmin(__headers.token);
+           if (verificationResult) {
+               return verificationResult;
+           }
+
             let school = await this.mongomodels.SchoolModel.findByIdAndDelete(schoolId);
             if (!school) {
                 return { error: 'School not found' };
@@ -66,8 +101,15 @@ class SchoolManager {
         }
     }
 
-    async listSchools({ page = 1, limit = 10 }) {
+    async listSchools({ __headers,page = 1, limit = 10 }) {
         try {
+
+            // Verify if the user is a super admin
+                const verificationResult = await this.verifySuperAdmin(__headers.token);
+                if (verificationResult) {
+                    return verificationResult;
+                }
+
             let schools = await this.mongomodels.SchoolModel.find()
                 .skip((page - 1) * limit)
                 .limit(limit);
@@ -76,8 +118,13 @@ class SchoolManager {
             return { error: 'An error occurred while listing the schools' };
         }
     }
-    async addAdmins({userId,schoolId}){
+    async addSchoolAdmins({__headers,userId,schoolId}){
         try {
+            // Verify if the user is a super admin
+            const verificationResult = await this.verifySuperAdmin(__headers.token);
+            if (verificationResult) {
+                return verificationResult;
+            }
             // Check if the user exists
             let user = await this.mongomodels.UserModel.findById(userId);
             if (!user) {
@@ -94,65 +141,18 @@ class SchoolManager {
             if (!school.admins.includes(userId)) {
                 school.admins.push(userId);
                 await school.save();
+                user.role = 'schoolAdmin'
+                await user.save(); 
             }
     
             return { school };
         }
         catch (error) {
+            console.log(error)
             return { error: 'An error occurred while adding the admin' };
         }
     }
 
-    // Remove Admins
-    async removeAdmin(schoolId, userId) {
-        try {
-            const school = await School.findById(schoolId);
-            if (!school) {
-                return { error: 'School not found' };
-            }
-
-            const adminIndex = school.admins.indexOf(userId);
-            if (adminIndex > -1) {
-                school.admins.splice(adminIndex, 1);
-                await school.save();
-            }
-
-            return { school };
-        } catch (error) {
-            return { error: 'An error occurred while removing the admin' };
-        }
-    }
-
-    // Update Admins
-    async updateAdmins(schoolId, newAdmins) {
-        try {
-            const school = await School.findById(schoolId);
-            if (!school) {
-                return { error: 'School not found' };
-            }
-
-            school.admins = newAdmins;
-            await school.save();
-
-            return { school };
-        } catch (error) {
-            return { error: 'An error occurred while updating the admins' };
-        }
-    }
-
-    // Get Admins
-    async getAdmins(schoolId) {
-        try {
-            const school = await School.findById(schoolId);
-            if (!school) {
-                return { error: 'School not found' };
-            }
-
-            return { admins: school.admins };
-        } catch (error) {
-            return { error: 'An error occurred while retrieving the admins' };
-        }
-    }
 }
 
 module.exports = SchoolManager;

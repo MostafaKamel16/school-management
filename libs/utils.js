@@ -22,6 +22,20 @@ const hashPassword = async (password)=>{
     return hashedPassword;
 }
 
+const comparePassword = async (password, hashedPassword) => {
+    return await bcrypt.compare(password, hashedPassword);
+}
+
+const formatMongooseError =(err)=> {
+    if (err.name === 'ValidationError') {
+        const errors = Object.keys(err.errors).map(key => ({
+            field: key,
+            message: err.errors[key].message
+        }));
+        return { errors };
+    }
+    return { error: 'An unknown error occurred' };
+}
 
 
 /**
@@ -156,4 +170,6 @@ module.exports = {
   match,
   isChance,
   hashPassword,
+  comparePassword,
+  formatMongooseError
 }
