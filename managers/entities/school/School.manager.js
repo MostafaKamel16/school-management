@@ -32,8 +32,6 @@ class SchoolManager {
 
         const school = { name, address, superadmin };
 
-        await this.validators.school.createSchool(school);
-        
         try {
             // Save the school to the database
             let createdSchool = await this.mongomodels.SchoolModel.create(school);

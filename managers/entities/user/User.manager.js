@@ -1,6 +1,5 @@
 const { getSuperAdmins } = require('../../../exportSuperAdmins');
 const superAdmins = getSuperAdmins();
-const ValidatorsLoader = require('../../../loaders/ValidatorsLoader'); 
 module.exports = class User { 
 
     constructor({utils, cache, config, cortex, managers, validators, mongomodels }={}){
@@ -17,8 +16,6 @@ module.exports = class User {
     async createUser({username, email, password}){  
         const user = {username, email, password};
 
-        // Data validation
-        await this.validators.user.createUser(user);
         
         try {
         // Check if user already exists
@@ -29,9 +26,13 @@ module.exports = class User {
          // Hash the password before saving
         user.password = await this.utils.hashPassword(password);
 
-        
             // Save the user to the database
-        let createdUser = await this.mongomodels.UserModel.create(user);
+        let createdUser;
+        try{
+         createdUser = await this.mongomodels.UserModel.create(user);}
+        catch(err){
+            return this.utils.formatMongooseError(err);
+        }
         // Creation Logic
         let longToken       = this.tokenManager.genLongToken({userId: createdUser._id });
         

@@ -43,8 +43,6 @@ class ClassroomManager {
         const school = await this.mongomodels.SchoolModel.findById(schoolId);
         const classroom = { name, school:school };
         
-        await this.validators.classroom.createClassroom(classroom);
-
 
         try {
             // Check if the school exists

@@ -44,7 +44,6 @@ class StudentManager {
         const student = { name, classroom, age };
 
    
-        await this.validators.student.createStudent(student);
         try {
             // Check if the classroom exists
             const classroomExists = await this.mongomodels.ClassroomModel.findById(classroom);
