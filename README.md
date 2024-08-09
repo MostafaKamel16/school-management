@@ -13,7 +13,7 @@ This is a school management application that allows users to perform basic CRUD 
 
 ## Installation
 
--- The application is deployed on heroku , The infrastructure consists of a DB, it is a MongoDb hosted on Mongo Atlas and redis instance hosted on Redis Labs. 
+The application is deployed on heroku , The infrastructure consists of a DB, it is a MongoDb hosted on Mongo Atlas and redis instance hosted on Redis Labs. 
 
 To Access the deployed application, Here is an example of one of the routes ,
 [https://school-management-mostafa-df166f6a3694.herokuapp.com/api/user/listUsers](https://school-management-mostafa-df166f6a3694.herokuapp.com/api/user/listUsers)
